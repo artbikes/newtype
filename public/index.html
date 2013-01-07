@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>{moz|webkit}RequestAnimationFrame Example</title>
+    <link rel="stylesheet" href="style.css" type="text/css"charset="utf-8" />
+    <script type="text/javascript" charset="utf-8" src="scripts/stats.js"></script>
+    <script type="text/javascript" charset="utf-8" src="scripts/rect.js"></script>
+    <script type="text/javascript" charset="utf-8" src="scripts/word.js"></script>
+    <script type="text/javascript" charset="utf-8" src="scripts/game.js"></script>
+    <script type="text/javascript" charset="utf-8" src="scripts/kibo.js"></script>
+    <script type="text/javascript" charset="utf-8" src="scripts/underscore.js"></script>
+  </head>
+  <body>
+    <canvas id="viewport" height="480" width="640"></canvas>
+
+    <script type="text/javascript" charset="utf-8">
+      var renderStats = new Stats();
+      document.body.appendChild(renderStats.domElement);
+
+      var updateStats = new Stats();
+      document.body.appendChild(updateStats.domElement);
+
+      Game.initialize();
+
+      // Add some words -- Game.entities[0].word
+			var running = false;
+			var baseX = 45;
+			var baseY = 45;
+			var stopTime = 0;
+			var words = ["aa","aah","moo","quest","pig","quest","trod","quest"];
+			for (var i = 0; i < words.length; i++) {
+      	Game.addWord(words[i],baseX,baseY);
+				baseY = baseY + 30;
+			}
+			var k = new Kibo();
+      k.down('backspace', function() { return false; });
+			k.down('space', function () {
+				if(!running)
+					running = true;
+			});
+			k.down('any letter', function () {}).up('any letter', function () {
+				if(!running){return};
+				_.last(Game.entities).word = _.last(Game.entities).word + k.lastKey();
+			});
+			k.down('backspace', function () {
+				_.last(Game.entities).word = _.last(Game.entities).word.slice(0,-1);
+			});
+			k.down('shift backspace', function () {
+				_.last(Game.entities).word = "";
+			});
+
+			targetWord = 0;
+			baseX = 150;
+			baseY = 45;
+      
+			Game.addWord("",baseX,baseY);
+
+      Game.run = (function() {
+        var loops = 0, skipTicks = 1000 / Game.fps,
+            maxFrameSkip = 10,
+            nextGameTick = (new Date).getTime();
+
+        return function() {
+          loops = 0;
+
+          while ((new Date).getTime() > nextGameTick) {
+            updateStats.update();
+            Game.update();
+            nextGameTick += skipTicks;
+            loops++;
+          }
+
+          renderStats.update();
+          Game.draw();
+        };
+      })();
+      
+      (function() {
+        var onEachFrame;
+        if (window.webkitRequestAnimationFrame) {
+          onEachFrame = function(cb) {
+            var _cb = function() { cb(); webkitRequestAnimationFrame(_cb); }
+            _cb();
+          };
+        } else if (window.mozRequestAnimationFrame) {
+          onEachFrame = function(cb) {
+            var _cb = function() { cb(); mozRequestAnimationFrame(_cb); }
+            _cb();
+          };
+        } else {
+          onEachFrame = function(cb) {
+            setInterval(cb, 1000 / 60);
+          }
+        }
+        
+        window.onEachFrame = onEachFrame;
+      })();
+
+      window.onEachFrame(Game.run);
+    </script>
+  </body>
+</html>
+
