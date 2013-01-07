@@ -33,14 +33,18 @@
 				baseY = baseY + 30;
 			}
 			var k = new Kibo();
+      var keyPress = "";
       k.down('backspace', function() { return false; });
 			k.down('space', function () {
 				if(!running)
 					running = true;
 			});
-			k.down('any letter', function () {}).up('any letter', function () {
+    k.down('any letter', function () {
+      keyPress = keyPress + k.lastKey(); 
+    }).up('any letter', function () {
 				if(!running){return};
-				_.last(Game.entities).word = _.last(Game.entities).word + k.lastKey();
+				_.last(Game.entities).word = _.last(Game.entities).word + keyPress;
+        keyPress = "";
 			});
 			k.down('backspace', function () {
 				_.last(Game.entities).word = _.last(Game.entities).word.slice(0,-1);
